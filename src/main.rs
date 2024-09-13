@@ -22,23 +22,26 @@ impl Unidad {
             _ => None,
         }
     }
-}
 
-#[derive(Debug)]
-struct Medida {
-    valor: f64,
-    unidad: Unidad,
-}
+    fn a_metros(&self, valor: f64) -> f64 {
+        match self {
+            Unidad::Metro => valor,
+            Unidad::Kilometro => valor * 1000.0,
+            Unidad::Centimetro => valor / 100.0,
+            Unidad::Milimetro => valor / 1000.0,
+            Unidad::Pulgada => valor * 0.0254,
+            Unidad::Pie => valor * 0.3048,
+        }
+    }
 
-impl Medida {
-    fn convertir_a_metros(&self) -> f64 {
-        match self.unidad {
-            Unidad::Metro => self.valor,
-            Unidad::Kilometro => self.valor * 1000.0,
-            Unidad::Centimetro => self.valor / 100.0,
-            Unidad::Milimetro => self.valor / 1000.0,
-            Unidad::Pulgada => self.valor * 0.0254,
-            Unidad::Pie => self.valor * 0.3048,
+    fn desde_metros(&self, metros: f64) -> f64 {
+        match self {
+            Unidad::Metro => metros,
+            Unidad::Kilometro => metros / 1000.0,
+            Unidad::Centimetro => metros * 100.0,
+            Unidad::Milimetro => metros * 1000.0,
+            Unidad::Pulgada => metros / 0.0254,
+            Unidad::Pie => metros / 0.3048,
         }
     }
 }
@@ -56,32 +59,52 @@ fn main() {
             }
         };
 
-        println!("Ingresa la unidad (metro, kilometro, centimetro, milimetro, pulgada, pie):");
-        let mut input_unidad = String::new();
-        io::stdin().read_line(&mut input_unidad).expect("Error al leer la entrada");
-        let unidad = match Unidad::from_str(&input_unidad) {
+        println!("Ingresa la unidad de origen (metro, kilometro, centimetro, milimetro, pulgada, pie):");
+        let mut input_unidad_origen = String::new();
+        io::stdin().read_line(&mut input_unidad_origen).expect("Error al leer la entrada");
+        let unidad_origen = match Unidad::from_str(&input_unidad_origen) {
             Some(u) => u,
             None => {
-                println!("Unidad no válida. Inténtalo de nuevo.");
+                println!("Unidad de origen no válida. Inténtalo de nuevo.");
                 continue;
             }
         };
 
-        let medida = Medida { valor, unidad };
-        let valor_en_metros = medida.convertir_a_metros();
+        loop {
+            println!("Ingresa la unidad de destino (metro, kilometro, centimetro, milimetro, pulgada, pie) o 'salir' para terminar:");
+            let mut input_unidad_destino = String::new();
+            io::stdin().read_line(&mut input_unidad_destino).expect("Error al leer la entrada");
+            let input_unidad_destino = input_unidad_destino.trim().to_lowercase();
 
-        println!(
-            "El valor {} en {:?} es equivalente a {} metros.",
-            medida.valor, medida.unidad, valor_en_metros
-        );
+            if input_unidad_destino == "salir" {
+                println!("Saliendo del programa.");
+                return;
+            }
 
-        println!("¿Quieres hacer otra conversión? (si/no):");
-        let mut continuar = String::new();
-        io::stdin().read_line(&mut continuar).expect("Error al leer la entrada");
+            let unidad_destino = match Unidad::from_str(&input_unidad_destino) {
+                Some(u) => u,
+                None => {
+                    println!("Unidad de destino no válida. Inténtalo de nuevo.");
+                    continue;
+                }
+            };
 
-        if continuar.trim().to_lowercase() != "si" {
-            println!("Saliendo del programa.");
-            break;
+            let valor_en_metros = unidad_origen.a_metros(valor);
+
+            let valor_convertido = unidad_destino.desde_metros(valor_en_metros);
+
+            println!(
+                "El valor {} en {:?} es equivalente a {} en {:?}.",
+                valor, unidad_origen, valor_convertido, unidad_destino
+            );
+
+            println!("¿Deseas convertir a otra unidad? (si/no):");
+            let mut continuar = String::new();
+            io::stdin().read_line(&mut continuar).expect("Error al leer la entrada");
+
+            if continuar.trim().to_lowercase() != "si" {
+                break;
+            }
         }
     }
 }
